@@ -3,6 +3,9 @@
     <string name="app_name">XYZ Reader</string>
     <string name="welcome_xyz_reader">Welcome to XYZ Reader!</string>
 
+    <!-- Content descriptors -->
+    <string name="content_logo">Application logo</string>
+
     <string name="action_refresh">Refresh</string>
     <string name="action_settings">Settings</string>
     <string name="action_share">Share</string>
