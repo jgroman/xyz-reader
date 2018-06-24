@@ -12,10 +12,7 @@ import android.content.Intent;
 import android.support.v4.content.Loader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.graphics.drawable.ColorDrawable;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -26,9 +23,6 @@ import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.ShareCompat;
-import android.support.v4.widget.NestedScrollView;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
@@ -38,7 +32,6 @@ import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,9 +63,10 @@ public class ArticleDetailFragment extends Fragment implements
     private View mRootView;
     private int mMutedColor = 0xFF333333;
     private int mVibrantColor;
-    private NestedScrollView mScrollView;
 
     private CollapsingToolbarLayout mToolbarLayout;
+    private Toolbar mToolbar;
+    private Menu mMenu;
     private FloatingActionButton mFab;
     private ImageView mPhotoView;
 
@@ -110,6 +104,8 @@ public class ArticleDetailFragment extends Fragment implements
                 mItemId = bundle.getLong(ARG_ITEM_ID);
             }
         }
+
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -128,24 +124,41 @@ public class ArticleDetailFragment extends Fragment implements
                              Bundle savedInstanceState) {
 
         mTitle = "";
+        mActivity = getActivity();
 
         mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
 
         mToolbarLayout = mRootView.findViewById(R.id.toolbar_layout);
-        mToolbarLayout.setTitle(" ");
 
-        Toolbar toolbar = mRootView.findViewById(R.id.toolbar);
-
-        mActivity = getActivity();
-        if (mActivity != null) {
-            ((AppCompatActivity) mActivity).setSupportActionBar(toolbar);
-            // Enable Back arrow on action bar
-            ActionBar actionBar = ((AppCompatActivity) mActivity).getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setDisplayHomeAsUpEnabled(true);
-                actionBar.setDisplayShowHomeEnabled(true);
+        mToolbar = mRootView.findViewById(R.id.toolbar);
+        // Back navigation
+        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mActivity != null) {
+                    mActivity.finish();
+                }
             }
-        }
+        });
+
+        // Options menu
+        mToolbar.inflateMenu(R.menu.fragment_article_detail_menu);
+        mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.item_action_share:
+                        startShareIntent(mActivity);
+                        return true;
+                }
+                return false;
+            }
+        });
+
+        // Hide share button
+        mMenu = mToolbar.getMenu();
+        mMenu.findItem(R.id.item_action_share).setVisible(false);
 
         mPhotoView = mRootView.findViewById(R.id.photo);
 
@@ -153,10 +166,7 @@ public class ArticleDetailFragment extends Fragment implements
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(getActivity())
-                        .setType("text/plain")
-                        .setText("Some sample text")
-                        .getIntent(), getString(R.string.action_share)));
+                startShareIntent(mActivity);
             }
         });
 
@@ -174,12 +184,13 @@ public class ArticleDetailFragment extends Fragment implements
 
                 if (scrollRange + verticalOffset == 0) {
                     // AppBar is fully collapsed
-                    //mToolbarLayout.setTitle(mTitle);
                     isShown = true;
+                    mMenu.findItem(R.id.item_action_share).setVisible(true);
                 }
                 else if (isShown) {
-                    //mToolbarLayout.setTitle(" ");
+                    // AppBar is not collapsed fully
                     isShown = false;
+                    mMenu.findItem(R.id.item_action_share).setVisible(false);
                 }
             }
         });
@@ -189,18 +200,21 @@ public class ArticleDetailFragment extends Fragment implements
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int itemId = item.getItemId();
+    public void onDestroyView() {
+        // Deregister listeners
+        mToolbar.setNavigationOnClickListener(null);
+        mToolbar.setOnMenuItemClickListener(null);
 
-        if (itemId == R.id.item_action_share) {
-            startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(mActivity)
+        super.onDestroyView();
+    }
+
+    private void startShareIntent(FragmentActivity activity) {
+        if (activity != null) {
+            startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(activity)
                     .setType("text/plain")
-                    .setText("Some sample text")
+                    .setText(mTitle)
                     .getIntent(), getString(R.string.action_share)));
-            return true;
         }
-
-        return super.onOptionsItemSelected(item);
     }
 
     private Date parsePublishedDate() {
@@ -219,7 +233,6 @@ public class ArticleDetailFragment extends Fragment implements
             return;
         }
 
-        TextView titleView = mRootView.findViewById(R.id.article_title);
         TextView bylineView = mRootView.findViewById(R.id.article_byline);
         TextView bodyView = mRootView.findViewById(R.id.article_body);
 
@@ -242,17 +255,15 @@ public class ArticleDetailFragment extends Fragment implements
                                 publishedDate.getTime(),
                                 System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
                                 DateUtils.FORMAT_ABBREV_ALL).toString()
-                                + " by <font color='#ffffff'>"
-                                + mCursor.getString(ArticleLoader.Query.AUTHOR)
-                                + "</font>"));
+                                + " by "
+                                + mCursor.getString(ArticleLoader.Query.AUTHOR)));
 
             }
             else {
                 // If date is before 1902, just show the string
                 bylineView.setText(fromHtml(
-                        outputFormat.format(publishedDate) + " by <font color='#ffffff'>"
-                        + mCursor.getString(ArticleLoader.Query.AUTHOR)
-                                + "</font>"));
+                        outputFormat.format(publishedDate) + " by "
+                        + mCursor.getString(ArticleLoader.Query.AUTHOR)));
             }
 
             bodyView.setText(fromHtml(mCursor.getString(ArticleLoader.Query.BODY).replaceAll("(\r\n|\n)", "<br />")));
@@ -270,10 +281,6 @@ public class ArticleDetailFragment extends Fragment implements
                                 Palette p = Palette.from(bitmap).maximumColorCount(14).generate();
                                 mMutedColor = p.getDarkMutedColor(0xFF333333);
                                 mVibrantColor = p.getVibrantColor(0xFF888888);
-
-                                // Set title text background color
-                                //mRootView.findViewById(R.id.meta_bar).setBackgroundColor(mMutedColor);
-                                //mRootView.findViewById(R.id.article_title).setBackgroundColor(mMutedColor);
 
                                 // Set toolbar background color
                                 mToolbarLayout.setStatusBarScrimColor(mMutedColor);
@@ -298,9 +305,8 @@ public class ArticleDetailFragment extends Fragment implements
         }
         else {
             mRootView.setVisibility(View.GONE);
-            //titleView.setText("N/A");
-            //bylineView.setText("N/A" );
-            //bodyView.setText("N/A");
+            bylineView.setText("N/A" );
+            bodyView.setText("N/A");
         }
     }
 
