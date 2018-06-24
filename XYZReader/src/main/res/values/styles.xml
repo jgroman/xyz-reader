@@ -25,6 +25,18 @@
         <item name="colorAccent">@color/theme_accent</item>
     </style>
 
+    <style name="Theme.Bacon.ActionBarTitle" parent="android:Widget.TextView">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textColor">#fff</item>
+    </style>
+
+    <style name="Theme.Bacon.ExpandedActionBarTitle" parent="BaseTheme">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textColor">#fff</item>
+        <item name="android:textSize">@dimen/detail_title_text_size</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="Theme.Bacon.Detail">
     </style>
 
