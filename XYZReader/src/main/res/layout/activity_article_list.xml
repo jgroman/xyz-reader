@@ -11,22 +11,22 @@
     >
 
     <android.support.design.widget.AppBarLayout
-        android:id="@+id/layout_appbar"
+        android:id="@+id/appbar_main"
         android:layout_width="match_parent"
-        android:layout_height="168dp"
-        android:fitsSystemWindows="true"
+        android:layout_height="@dimen/list_app_bar_height"
+        android:elevation="@dimen/elevation_app_bar"
         >
 
         <android.support.design.widget.CollapsingToolbarLayout
             android:id="@+id/layout_collapsing_toolbar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:elevation="8dp"
             android:fitsSystemWindows="true"
             app:contentScrim="?attr/colorPrimary"
             app:expandedTitleMarginEnd="64dp"
             app:expandedTitleMarginStart="48dp"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            >
 
             <!--ImageView
                 android:id="@+id/iv_logo"
@@ -53,25 +53,38 @@
     </android.support.design.widget.AppBarLayout>
 
     <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_refresh"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_margin="16dp"
         android:src="@drawable/ic_refresh_white_24dp"
-        app:layout_anchor="@id/layout_appbar"
+        app:layout_anchor="@id/appbar_main"
         app:layout_anchorGravity="bottom|right|end"
+        android:elevation="@dimen/elevation_fab"
         />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rv_items"
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/srl_main"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clipToPadding="false"
-        android:paddingBottom="0dp"
-        android:paddingLeft="@dimen/list_side_margin"
-        android:paddingRight="@dimen/list_side_margin"
-        android:paddingTop="0dp"
-        android:scrollbarStyle="outsideOverlay"
+        android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        />
+        >
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_items"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingBottom="0dp"
+            android:paddingLeft="@dimen/list_side_margin"
+            android:paddingRight="@dimen/list_side_margin"
+            android:paddingTop="0dp"
+            android:scrollbarStyle="outsideOverlay"
+            android:elevation="@dimen/elevation_card_default"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            />
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
 
 </android.support.design.widget.CoordinatorLayout>

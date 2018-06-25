@@ -1,5 +1,7 @@
 package com.example.xyzreader.ui;
 
+import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.LoaderManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -19,6 +21,7 @@ import android.text.Html;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,21 +42,81 @@ public class ArticleListActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = ArticleListActivity.class.toString();
+
     private Toolbar mToolbar;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
+    private Menu mMenu;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_article_list);
 
-        //mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        // Toolbar
+        mToolbar = findViewById(R.id.toolbar_main);
+        mToolbar.inflateMenu(R.menu.main_menu);
+        mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.item_refresh:
+                        refresh();
+                        return true;
+                }
+                return false;
+            }
+        });
 
+        // Hide refresh button on toolbar
+        mMenu = mToolbar.getMenu();
+        mMenu.findItem(R.id.item_refresh).setVisible(false);
+
+        // FAB
+        FloatingActionButton fab = findViewById(R.id.fab_refresh);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                refresh();
+            }
+        });
+
+        AppBarLayout appBarLayout = findViewById(R.id.appbar_main);
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+            boolean isShown = false;
+            int scrollRange = -1;
+
+            @Override
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+
+                if (scrollRange == -1) {
+                    scrollRange = appBarLayout.getTotalScrollRange();
+                }
+
+                if (scrollRange + verticalOffset == 0) {
+                    // AppBar is fully collapsed
+                    isShown = true;
+                    mMenu.findItem(R.id.item_refresh).setVisible(true);
+                }
+                else if (isShown) {
+                    // AppBar is not collapsed fully
+                    isShown = false;
+                    mMenu.findItem(R.id.item_refresh).setVisible(false);
+                }
+            }
+        });
 
         //final View toolbarContainerView = findViewById(R.id.toolbar_container);
 
-        //mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
+        // SwipeRefreshLayout
+        mSwipeRefreshLayout = findViewById(R.id.srl_main);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refresh();
+            }
+        });
 
         mRecyclerView = findViewById(R.id.rv_items);
         getSupportLoaderManager().initLoader(0, null, this);
@@ -80,6 +143,14 @@ public class ArticleListActivity extends AppCompatActivity implements
         unregisterReceiver(mRefreshingReceiver);
     }
 
+    @Override
+    protected void onDestroy() {
+        // Deregister listeners
+        mToolbar.setOnMenuItemClickListener(null);
+
+        super.onDestroy();
+    }
+
     private boolean mIsRefreshing = false;
 
     private BroadcastReceiver mRefreshingReceiver = new BroadcastReceiver() {
@@ -93,16 +164,17 @@ public class ArticleListActivity extends AppCompatActivity implements
     };
 
     private void updateRefreshingUI() {
-        //mSwipeRefreshLayout.setRefreshing(mIsRefreshing);
+        mSwipeRefreshLayout.setRefreshing(mIsRefreshing);
     }
 
+    @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return ArticleLoader.newAllArticlesInstance(this);
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+    public void onLoadFinished(@NonNull Loader<Cursor> cursorLoader, Cursor cursor) {
         Adapter adapter = new Adapter(cursor);
         adapter.setHasStableIds(true);
         mRecyclerView.setAdapter(adapter);
@@ -113,7 +185,7 @@ public class ArticleListActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         mRecyclerView.setAdapter(null);
     }
 

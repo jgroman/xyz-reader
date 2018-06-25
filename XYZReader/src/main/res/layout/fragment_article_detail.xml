@@ -11,7 +11,8 @@
     <android.support.design.widget.AppBarLayout
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/app_bar_height"
+        android:layout_height="@dimen/detail_app_bar_height"
+        android:elevation="@dimen/elevation_app_bar"
         >
 
         <android.support.design.widget.CollapsingToolbarLayout
@@ -60,6 +61,7 @@
         android:id="@+id/scrollview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:elevation="@dimen/elevation_card_default"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         >
 
@@ -109,6 +111,7 @@
         app:layout_anchor="@id/app_bar"
         app:layout_anchorGravity="bottom|end"
         app:srcCompat="@android:drawable/ic_menu_share"
+        android:elevation="@dimen/elevation_fab"
         />
 
 </android.support.design.widget.CoordinatorLayout>
