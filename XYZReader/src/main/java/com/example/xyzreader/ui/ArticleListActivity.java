@@ -107,8 +107,6 @@ public class ArticleListActivity extends AppCompatActivity implements
             }
         });
 
-        //final View toolbarContainerView = findViewById(R.id.toolbar_container);
-
         // SwipeRefreshLayout
         mSwipeRefreshLayout = findViewById(R.id.srl_main);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
